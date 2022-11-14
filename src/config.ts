@@ -17,9 +17,16 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
     gamepad: false
   },
   physics: {
-    default: 'arcade',
-    arcade: {
-      debug: false
+    default: 'matter',
+    matter: {
+        enableSleeping: true,
+        gravity: {
+            y: 0
+        },
+        debug: {
+            showBody: true,
+            showStaticBody: true
+        }
     }
   },
   backgroundColor: '#000000',
