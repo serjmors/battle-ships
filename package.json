@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/node": "^18.11.9",
     "typescript": "^4.6.4",
     "vite": "^3.2.3"
   },
   "dependencies": {
-    "phaser": "^3.55.2"
+    "phaser": "^3.55.2",
+    "phaser-animated-tiles-phaser3.5": "^2.0.5"
   }
 }

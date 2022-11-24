@@ -1,0 +1,35 @@
+{ "frames": {
+   "0": {
+    "frame": { "x": 28, "y": 1, "w": 24, "h": 24 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 5, "y": 5, "w": 22, "h": 22 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 500
+   },
+   "1": {
+    "frame": { "x": 1, "y": 1, "w": 26, "h": 26 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 4, "y": 4, "w": 24, "h": 24 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 500
+   }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.2.40-x64",
+  "image": "destination-point.png",
+  "format": "RGBA8888",
+  "size": { "w": 52, "h": 27 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "pulse", "from": 0, "to": 1, "direction": "forward" }
+  ],
+  "layers": [
+   { "name": "main", "opacity": 204, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

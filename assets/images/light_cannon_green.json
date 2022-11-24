@@ -1,0 +1,59 @@
+{ "frames": {
+   "0": {
+    "frame": { "x": 1, "y": 26, "w": 52, "h": 24 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 2, "y": 1, "w": 50, "h": 22 },
+    "sourceSize": { "w": 100, "h": 24 },
+    "duration": 50
+   },
+   "1": {
+    "frame": { "x": 202, "y": 1, "w": 71, "h": 24 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 69, "h": 22 },
+    "sourceSize": { "w": 100, "h": 24 },
+    "duration": 50
+   },
+   "2": {
+    "frame": { "x": 103, "y": 1, "w": 98, "h": 24 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 96, "h": 22 },
+    "sourceSize": { "w": 100, "h": 24 },
+    "duration": 100
+   },
+   "3": {
+    "frame": { "x": 1, "y": 1, "w": 101, "h": 24 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 99, "h": 22 },
+    "sourceSize": { "w": 100, "h": 24 },
+    "duration": 50
+   },
+   "4": {
+    "frame": { "x": 1, "y": 26, "w": 52, "h": 24 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 2, "y": 1, "w": 50, "h": 22 },
+    "sourceSize": { "w": 100, "h": 24 },
+    "duration": 50
+   }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.2.40-x64",
+  "image": "light_cannon_green.png",
+  "format": "RGBA8888",
+  "size": { "w": 273, "h": 50 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Fire", "from": 0, "to": 4, "direction": "forward" }
+  ],
+  "layers": [
+   { "name": "main", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

@@ -1,21 +1,56 @@
+import { Gun } from "./gun";
+
 type Vector2 = MatterJS.Vector
 
 export class Ship extends Phaser.Physics.Matter.Sprite{
     
     private isEngineOn: boolean = false;
-    private destination!: Vector2;    
+    private destination!: Vector2;
+    private target!: Vector2;
+    private gun!: Phaser.GameObjects.Sprite;
     
-    readonly TURN_SPEED = Math.PI/7;
+    private matterWorld!: Phaser.Physics.Matter.World;
+    
+    readonly SHIP_TURN_SPEED = Math.PI/7;
+    readonly GUN_TURN_SPEED = Math.PI/2;
 
-    constructor(world: Phaser.Physics.Matter.World, x: number,y :number, tex: string){
-        super(world, x, y, tex);
+    constructor(world: Phaser.Physics.Matter.World, x: number,y :number, tex: string, frame?: number){
 
+        super(world, x, y, tex, frame, {
+            mass: 5000,
+            frictionAir: 0.1
+        });
+
+        this.matterWorld = world;
+        
+        world.scene.add.existing(this); 
         world.add(this);
-        world.scene.add.existing(this);
-        this.setMass(5000);
-        this.setFrictionAir(0.1)
-
+       
         this.destination = this.body.position;
+        
+        this.setInteractive().on(
+            'pointerup', (pointer: Phaser.Input.Pointer,
+            localX: number, localY: number, event: any) =>
+        {
+            event.stopPropagation();
+            console.log('selected');
+        });
+
+    }
+
+    setGun(gun: Gun){
+        this.gun = gun;
+    }
+
+    getWorld(): Phaser.Physics.Matter.World{
+        return this.matterWorld;
+    }
+    getScene(): Phaser.Scene{
+        return this.world.scene;
+    }
+
+    fire(): void{
+        this.gun.play("Fire", true);
     }
 
     engineOn(): void{
@@ -28,24 +63,47 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
         this.steerTo(this.body.position);
     }
 
+    targetTo(target: Vector2): void{
+        this.target = target;
+    }
+
     steerTo(dest: Vector2): void{
         this.destination = dest;
     }
 
-    protected preUpdate(_: number, dt: number): void {
+    protected preUpdate(t: number, dt: number): void {
 
+        super.preUpdate(t, dt);
+
+        if (this.target){
+
+            const targetAngleRad = Phaser.Math.Angle.BetweenPoints(
+                this.gun,
+                this.target
+            ) ;
+
+            const RadRotationDelta = Phaser.Math.Angle.RotateTo(
+                this.gun.rotation,
+                targetAngleRad,
+                this.GUN_TURN_SPEED * 0.001 * dt
+            );
+
+            this.gun.setAngle(Phaser.Math.RadToDeg(RadRotationDelta));
+
+        }
+        
         if (this.destination) {
    
             const targetAngleRad = Phaser.Math.Angle.BetweenPoints(
                 this,
                 this.destination
-            ) + Math.PI/2;
+            ) ;
             
             
             const RadRotationDelta = Phaser.Math.Angle.RotateTo(
                 this.rotation,
                 targetAngleRad,
-                this.TURN_SPEED * 0.0005 * dt
+                this.SHIP_TURN_SPEED * 0.001 * dt
             );
 
             this.setAngle(Phaser.Math.RadToDeg(RadRotationDelta));
@@ -53,7 +111,7 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
         };
 
         if (this.isEngineOn){
-            this.thrustLeft(0.5)
+            this.thrust(0.5)
         }
 
     }

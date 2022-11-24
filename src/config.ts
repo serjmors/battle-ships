@@ -1,13 +1,19 @@
+import {LoaderScene} from './scenes/loader'
 import {BattleScene} from './scenes/battle'
 
 export const GameConfig: Phaser.Types.Core.GameConfig = {
   title: 'Battle-ships',
   version: '1.0',
-  width: 800,
-  height: 600,
+  scale: {
+    mode: Phaser.Scale.ENVELOP,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 1920,
+    height: 1080,
+  },
   type: Phaser.AUTO,
   parent: 'game',
   scene: [
+    LoaderScene,
     BattleScene
   ],
   input: {
@@ -30,5 +36,9 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
     }
   },
   backgroundColor: '#000000',
-  render: { pixelArt: false, antialias: true }
+  render: {
+    pixelArt: false,
+    antialias: true,
+    antialiasGL: true
+  }
 };
