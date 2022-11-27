@@ -26,11 +26,11 @@ export class BattleScene extends Phaser.Scene {
         const scene = this;
         const camera = this.cameras.main;
 
-        // const map = this.make.tilemap({ key: 'map'});
-        //map.addTilesetImage('water');
-        //map.createLayer(0, 'water', 0, 0);
+        const map = this.make.tilemap({ key: 'map'});
+        const tileset = map.addTilesetImage('animated-tileset');
+        map.createLayer(0, tileset);
 
-        //this.animatedTiles.init(map);
+        this.animatedTiles.init(map);
         
         this.dest = this.add.sprite(0, 0, 'destination_point');
         this.dest.visible = false;
@@ -70,16 +70,12 @@ export class BattleScene extends Phaser.Scene {
             });
 
             scene.source.engineOn();
-            scene.source.steerTo(scene.target);
-
-            
+            scene.source.steerTo(scene.target); 
            
         });
 
         this.input.on('pointermove', function (pointer: Phaser.Input.Pointer) {
-
             scene.source.targetTo({x: pointer.worldX, y: pointer.worldY})
-           
         });
 
     

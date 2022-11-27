@@ -82,8 +82,9 @@ export class LoaderScene extends Phaser.Scene {
         this.load.aseprite('green_cannon', 'images/light_cannon_green.png', 'images/light_cannon_green.json');
         this.load.aseprite('destination_point', 'images/destination-point.png', 'images/destination-point.json');
 
-        //this.load.atlas('water', 'water/ocean-anim.png', 'water/ocean-anim.json');
-        //this.load.tilemapTiledJSON('map', 'water/water_square.json');
+        this.load.image('animated-tileset', 'images/animated-water-sand.png');  
+        this.load.tilemapTiledJSON('map', 'maps/test-level.json');
+
     }
   
 }
