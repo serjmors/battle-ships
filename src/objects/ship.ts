@@ -10,6 +10,8 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
     private gun!: Phaser.GameObjects.Sprite;
     
     private matterWorld!: Phaser.Physics.Matter.World;
+
+    private waterTrail!: Phaser.GameObjects.Particles.ParticleEmitter;
     
     readonly SHIP_TURN_SPEED = Math.PI/7;
     readonly GUN_TURN_SPEED = Math.PI/2;
@@ -23,6 +25,27 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
 
         this.matterWorld = world;
         
+        const trail = world.scene.add.particles('boat_1_trail');;
+        this.waterTrail = trail.createEmitter({
+            gravityX: 0,
+            gravityY: 0,
+            follow: this,
+            alpha: {
+                start: 1,
+                end: 0,
+                ease: 'Quadratic.Out'
+            },
+            lifespan: 8000,
+            maxParticles: 100,
+            frequency: 500,
+            scale: {
+                start: 1, 
+                end: 5,
+                ease: 'Quadratic.Out'
+            },
+            blendMode:'add'
+        });
+
         world.scene.add.existing(this); 
         world.add(this);
        
@@ -55,12 +78,14 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
 
     engineOn(): void{
         this.isEngineOn = true;
+        this.waterTrail.start();
     }
 
     engineOff(): void {
         if (!this.isEngineOn) return;
         this.isEngineOn = false;
         this.steerTo(this.body.position);
+        this.waterTrail.stop()
     }
 
     targetTo(target: Vector2): void{

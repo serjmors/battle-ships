@@ -78,7 +78,6 @@ export class BattleScene extends Phaser.Scene {
             scene.source.targetTo({x: pointer.worldX, y: pointer.worldY})
         });
 
-    
     }
   
     update(): void {
