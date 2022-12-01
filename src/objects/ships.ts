@@ -1,30 +1,56 @@
-import { Gun } from "./gun";
+import { ITurret } from "./turrets";
 
 type Vector2 = MatterJS.Vector
 
-export class Ship extends Phaser.Physics.Matter.Sprite{
+interface IWorldActor{
+    getWorld(): Phaser.Physics.Matter.World;
+    getScene(): Phaser.Scene;
+}
+
+export interface IShip{
+    setTurret(turret: ITurret): void;
+    fire(): void;
+    aim(target: Vector2): void;
+    steer(target: Vector2): void;
+    engineOn(): void;
+    engineOff(): void; 
+}
+
+interface IShipConfig{
+    mass?: number,
+    friction?: number,
+    turnSpeed?: number,
+    textureId: string,
+}
+
+const DefaultShipConfig: IShipConfig = {
+    textureId: 'default',
+    mass: 5000,
+    friction: 0.1,
+    turnSpeed: Math.PI / 7
+}
+
+export class BaseShip extends Phaser.Physics.Matter.Sprite implements IWorldActor, IShip{
     
+    private turnSpeed: number;
     private isEngineOn: boolean = false;
-    private destination!: Vector2;
-    private target!: Vector2;
-    private gun!: Phaser.GameObjects.Sprite;
-    
+    private destination!: Vector2 | undefined;
+    private turret!: ITurret;
     private matterWorld!: Phaser.Physics.Matter.World;
-
     private waterTrail!: Phaser.GameObjects.Particles.ParticleEmitter;
-    
-    readonly SHIP_TURN_SPEED = Math.PI/7;
-    readonly GUN_TURN_SPEED = Math.PI/2;
 
-    constructor(world: Phaser.Physics.Matter.World, x: number,y :number, tex: string, frame?: number){
+    constructor(world: Phaser.Physics.Matter.World, x: number,y :number, conf: IShipConfig){
 
-        super(world, x, y, tex, frame, {
-            mass: 5000,
-            frictionAir: 0.1
+        conf = {...DefaultShipConfig, ...conf};
+
+        super(world, x, y, conf.textureId, 0, {
+            mass: conf.mass,
+            frictionAir: conf.friction
         });
 
+        this.turnSpeed = conf.turnSpeed || Math.PI/7;
+
         this.matterWorld = world;
-        
         const trail = world.scene.add.particles('boat_1_trail');;
         this.waterTrail = trail.createEmitter({
             gravityX: 0,
@@ -44,36 +70,27 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
                 ease: 'Quadratic.Out'
             },
             blendMode:'add'
-        });
+        }).stop();
 
         world.scene.add.existing(this); 
         world.add(this);
-       
-        this.destination = this.body.position;
-        
-        this.setInteractive().on(
-            'pointerup', (pointer: Phaser.Input.Pointer,
-            localX: number, localY: number, event: any) =>
-        {
-            event.stopPropagation();
-            console.log('selected');
-        });
 
-    }
-
-    setGun(gun: Gun){
-        this.gun = gun;
     }
 
     getWorld(): Phaser.Physics.Matter.World{
         return this.matterWorld;
     }
+
     getScene(): Phaser.Scene{
         return this.world.scene;
     }
 
+    setTurret(turret: ITurret): void{
+        this.turret = turret;
+    }
+
     fire(): void{
-        this.gun.play("Fire", true);
+        this.turret.fire();
     }
 
     engineOn(): void{
@@ -84,38 +101,21 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
     engineOff(): void {
         if (!this.isEngineOn) return;
         this.isEngineOn = false;
-        this.steerTo(this.body.position);
+        this.steer(this.body.position);
         this.waterTrail.stop()
     }
 
-    targetTo(target: Vector2): void{
-        this.target = target;
+    aim(target: Vector2): void{
+        this.turret.track(target);
     }
 
-    steerTo(dest: Vector2): void{
+    steer(dest: Vector2): void{
         this.destination = dest;
     }
 
     protected preUpdate(t: number, dt: number): void {
 
         super.preUpdate(t, dt);
-
-        if (this.target){
-
-            const targetAngleRad = Phaser.Math.Angle.BetweenPoints(
-                this.gun,
-                this.target
-            ) ;
-
-            const RadRotationDelta = Phaser.Math.Angle.RotateTo(
-                this.gun.rotation,
-                targetAngleRad,
-                this.GUN_TURN_SPEED * 0.001 * dt
-            );
-
-            this.gun.setAngle(Phaser.Math.RadToDeg(RadRotationDelta));
-
-        }
         
         if (this.destination) {
    
@@ -128,7 +128,7 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
             const RadRotationDelta = Phaser.Math.Angle.RotateTo(
                 this.rotation,
                 targetAngleRad,
-                this.SHIP_TURN_SPEED * 0.001 * dt
+                this.turnSpeed * 0.001 * dt
             );
 
             this.setAngle(Phaser.Math.RadToDeg(RadRotationDelta));
@@ -141,4 +141,20 @@ export class Ship extends Phaser.Physics.Matter.Sprite{
 
     }
 
+}
+
+export class LightBoat extends BaseShip{
+
+    readonly TURN_SPEED = Math.PI/7;
+
+    constructor(world: Phaser.Physics.Matter.World, x: number,y :number){
+
+        super(world, x, y, {
+            textureId: 'green_boat',
+            mass: 5000,
+            friction: 0.1,
+            turnSpeed: Math.PI / 7
+        });
+
+    }
 }

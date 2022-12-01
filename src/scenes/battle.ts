@@ -1,5 +1,5 @@
-import { Ship } from "../objects/ship";
-import { Gun } from "../objects/gun";
+import { BaseShip, LightBoat } from "../objects/ships";
+import { SingleTurret } from "../objects/turrets";
 import AnimatedTiles from 'phaser-animated-tiles-phaser3.5';
 
 export class BattleScene extends Phaser.Scene {
@@ -8,7 +8,7 @@ export class BattleScene extends Phaser.Scene {
     
     private target: Phaser.Math.Vector2 = new Phaser.Math.Vector2(400, 300);
     private dest!: Phaser.GameObjects.Sprite;
-    private source!: Ship;
+    private source!: BaseShip;
     private graphics!: Phaser.GameObjects.Graphics;
 
     constructor() {
@@ -36,8 +36,8 @@ export class BattleScene extends Phaser.Scene {
         this.dest.visible = false;
         this.anims.createFromAseprite('destination_point')
            
-        this.source = new Ship(this.matter.world, 400, 300, 'green_boat');
-        new Gun(this.source, 'green_cannon');
+        this.source = new LightBoat(this.matter.world, 400, 300);
+        new SingleTurret(this.source, 'green_cannon');
               
         this.graphics = this.add.graphics({ lineStyle: { width: 4, color: 0xaa00aa, alpha: 0.5} });
         
@@ -70,12 +70,12 @@ export class BattleScene extends Phaser.Scene {
             });
 
             scene.source.engineOn();
-            scene.source.steerTo(scene.target); 
+            scene.source.steer(scene.target); 
            
         });
 
         this.input.on('pointermove', function (pointer: Phaser.Input.Pointer) {
-            scene.source.targetTo({x: pointer.worldX, y: pointer.worldY})
+            scene.source.aim({x: pointer.worldX, y: pointer.worldY})
         });
 
     }
