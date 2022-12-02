@@ -8,10 +8,9 @@
       #tools{
         padding: 4px 10px;
         flex-direction: column;
-        width: 200px;
-        row-gap: 4px;
+        width: 100px;
+        row-gap: 10px;
         column-gap: 1em;
-        flex-wrap: wrap;
       }
     </style>
   </head>
@@ -19,8 +18,10 @@
     <div style="display:flex">
       <div id="editor"></div>
       <aside id="tools">
-        <input type="file" name="Sprite" id="sprite_texture">
+        <input type="file" name="Sprite" id="sprite_texture" accept="image/*">
+        <input type="file" name="Collider" id="ship_descriptor" accept="application/json">
         <button id="save">Save</button>
+        
       </aside>
   </div>
     <script type="module" src="/src/editor.ts"></script>

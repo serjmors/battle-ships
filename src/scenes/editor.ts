@@ -1,4 +1,4 @@
-const spriteId = 'boat_1_green'
+const spriteId = 'ship_template'
 
 export class EditorScene extends Phaser.Scene {
     
@@ -116,19 +116,41 @@ export class EditorScene extends Phaser.Scene {
             }
         });
 
-        /*this.input.on('pointerup', () => {
-            var input = document.createElement("INPUT");
-            input.setAttribute("type", "file"); 
-            input.setAttribute("id", "fileinput");
-            document.body.appendChild(input);
-            input.addEventListener(
-                "change",
-                e => console.log(URL.createObjectURL(e.currentTarget?.files[0]))
-            );
-            input.click();
-            document.body.removeChild(input);
+        document.getElementById("save")!.onclick = async e =>{
+            const fileHandle = await window.showSaveFilePicker({
+                types:[{
+                    description: 'Ship descriptor',
+                    accept: {'application/json': ['.ship']},
+                }]
+            });
+            const fileStream = await fileHandle.createWritable();
+
+            const content = new Blob([
+                JSON.stringify(
+                    this.vertices.map(
+                        v => {return {x: v.x, y: v.y }}
+                    ) 
+                )
+            ])
+            await fileStream.write(content);
+            await fileStream.close()
         }
-        )*/
+
+        document.getElementById("ship_descriptor")!.onchange = e => {
+            
+            const target = e.currentTarget as any;
+            const file = target.files[0];
+
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            scene.load.json(spriteId, url)
+            scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
+                console.log(scene.cache.json.get(spriteId));
+                URL.revokeObjectURL(url);
+            })
+            scene.load.start();
+        };
 
         document.getElementById("sprite_texture")!.onchange = e => {
             

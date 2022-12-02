@@ -13,7 +13,11 @@ export default defineConfig({
     watch:{
       ignored: [
         './src/scenes/*/**'
-      ]
+      ],
+      awaitWriteFinish:{
+        pollInterval: 2000,
+        stabilityThreshold: 1000
+      }
     }
   },
 })
