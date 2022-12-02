@@ -31,7 +31,7 @@ export class EditorScene extends Phaser.Scene {
 
         camera.setBackgroundColor('rgba(128, 128, 128)')
         this.target = this.add.sprite(0, 0, spriteId);
-        this.cameras.main.centerOn(this.target.x, this.target.y);
+        camera.centerOn(this.target.x, this.target.y);
 
         this.graphics = this.add.graphics({
             lineStyle:{
@@ -128,18 +128,30 @@ export class EditorScene extends Phaser.Scene {
             input.click();
             document.body.removeChild(input);
         }
-        )
+        )*/
 
-        document.getElementById("sprite_texture").onchange = function(e){
-            console.log(e.target.files);
-            new Phaser.Textures.Texture()
-            scene.load.image(spriteId, )
+        document.getElementById("sprite_texture")!.onchange = e => {
+            
+            const target = e.currentTarget as any;
+            const file = target.files[0];
+
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            this.target.destroy();
+            scene.textures.remove(spriteId);
+            scene.load.image(spriteId, url)
             scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-                // texture loaded so use instead of the placeholder
-                this.tar.setTexture(cardName)
+                console.log('load completed');
+                
+                scene.target = scene.add.sprite(0, 0, spriteId);
+                camera.centerOn(scene.target.x, scene.target.y);
+                this.children.bringToTop(this.graphics);
+
+                URL.revokeObjectURL(url);
             })
-            this.load.start()
-        };*/
+            scene.load.start();
+        };
     }
 
     update(time: number, delta: number): void {
