@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ship editor</title>
+    <style>
+      #tools{
+        padding: 4px 10px;
+        flex-direction: column;
+        width: 200px;
+        row-gap: 4px;
+        column-gap: 1em;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display:flex">
+      <div id="editor"></div>
+      <aside id="tools">
+        <input type="file" name="Sprite" id="sprite_texture">
+        <button id="save">Save</button>
+      </aside>
+  </div>
+    <script type="module" src="/src/editor.ts"></script>
+  </body>
+</html>

@@ -25,18 +25,19 @@ export class BattleScene extends Phaser.Scene {
 
         const scene = this;
         const camera = this.cameras.main;
-
+        
         const map = this.make.tilemap({ key: 'map'});
         const tileset = map.addTilesetImage('animated-tileset');
-        map.createLayer(0, tileset);
-
+        const mainLayer = map.createLayer(0, tileset);
         this.animatedTiles.init(map);
         
+        this.matter.world.setBounds(0, 0, mainLayer.width, mainLayer.height)
+
         this.dest = this.add.sprite(0, 0, 'destination_point');
         this.dest.visible = false;
         this.anims.createFromAseprite('destination_point')
            
-        this.source = new LightBoat(this.matter.world, 400, 300);
+        this.source = new LightBoat(this.matter.world, 100, 100);
         new SingleTurret(this.source, 'green_cannon');
               
         this.graphics = this.add.graphics({ lineStyle: { width: 4, color: 0xaa00aa, alpha: 0.5} });
@@ -52,25 +53,31 @@ export class BattleScene extends Phaser.Scene {
             ) => 
             {  
                 camera.zoom -= deltaY * 0.001;
-                camera.zoom = Phaser.Math.Clamp(camera.zoom, 0.4, 1)
+                camera.zoom = Phaser.Math.Clamp(camera.zoom, 0.4, 2)
     
             }
         );
-
+        
         this.input.on('pointerup', function (pointer: Phaser.Input.Pointer) {
             
-            scene.target.x = pointer.worldX;
-            scene.target.y = pointer.worldY;
+            if (pointer.rightButtonReleased()){
+                scene.target.x = pointer.worldX;
+                scene.target.y = pointer.worldY;
 
-            scene.dest.setPosition(pointer.worldX, pointer.worldY);
-            scene.dest.visible = true;
-            scene.dest.play({
-                key:'pulse',
-                repeat: -1
-            });
+                scene.dest.setPosition(pointer.worldX, pointer.worldY);
+                scene.dest.visible = true;
+                scene.dest.play({
+                    key:'pulse',
+                    repeat: -1
+                });
 
-            scene.source.engineOn();
-            scene.source.steer(scene.target); 
+                scene.source.engineOn();
+                scene.source.steer(scene.target);
+            }
+
+            if (pointer.leftButtonReleased()){
+                scene.source.fire();
+            }
            
         });
 
@@ -102,6 +109,5 @@ export class BattleScene extends Phaser.Scene {
         );
         */
     }
-  
 
 }

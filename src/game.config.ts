@@ -1,5 +1,5 @@
-import {LoaderScene} from './scenes/loader'
-import {BattleScene} from './scenes/battle'
+import { LoaderScene } from './scenes/loader'
+import { BattleScene } from './scenes/battle'
 
 export const GameConfig: Phaser.Types.Core.GameConfig = {
   title: 'Battle-ships',
@@ -12,6 +12,7 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
   },
   type: Phaser.AUTO,
   parent: 'game',
+  disableContextMenu: true,
   scene: [
     LoaderScene,
     BattleScene
@@ -20,7 +21,7 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
     keyboard: true,
     mouse: true,
     touch: false,
-    gamepad: false
+    gamepad: false,
   },
   physics: {
     default: 'matter',
@@ -31,7 +32,8 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
         },
         debug: {
             showBody: true,
-            showStaticBody: true
+            showStaticBody: true,
+            //showAxes: true
         }
     }
   },

@@ -45,7 +45,8 @@ export class BaseShip extends Phaser.Physics.Matter.Sprite implements IWorldActo
 
         super(world, x, y, conf.textureId, 0, {
             mass: conf.mass,
-            frictionAir: conf.friction
+            frictionAir: conf.friction,
+            vertices: [{"x":-50,"y":-3},{"x":-39,"y":-18},{"x":12,"y":-18},{"x":33,"y":-12},{"x":51,"y":0},{"x":34,"y":11},{"x":12,"y":18},{"x":-39,"y":18},{"x":-50,"y":3}]
         });
 
         this.turnSpeed = conf.turnSpeed || Math.PI/7;

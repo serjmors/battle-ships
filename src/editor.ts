@@ -1,5 +1,5 @@
 import 'phaser';
-import { GameConfig } from './game.config';
+import { GameConfig } from './editor.config';
 
 export class Game extends Phaser.Game {
   constructor(config: Phaser.Types.Core.GameConfig) {

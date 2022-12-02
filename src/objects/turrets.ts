@@ -81,8 +81,16 @@ export class SingleTurret extends BaseTurret{
         this.setOrigin(0.14, 0.54);
     }
 
+    protected projectileOrigin(): Vector2 {
+        return this.getCenter().lerp(this.getRightCenter(), 0.65)
+    }
+
     protected turretOrigin(): Vector2 {
         return this.ship.getCenter().lerp(this.ship.getLeftCenter(), 0.2)
+    }
+
+    fire(): void {
+        super.fire();
     }
 
 }
