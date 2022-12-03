@@ -1,7 +1,5 @@
 import { safeJsonParse, ParseResult } from "../utils/safeJson";
 
-const spriteId = 'ship_template'
-
 type Vector2Type = {x: number, y: number}
 interface ShipDescriptor{
     key: string,
