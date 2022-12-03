@@ -100,9 +100,7 @@ export class EditorScene extends Phaser.Scene {
     loadDescriptor(descriptor: ShipDescriptor){
 
         this.descriptor = descriptor;
-        this.descriptorText.value = JSON.stringify(
-            this.descriptor, undefined, 1
-        );
+        this.updateDescriptorText();
 
         if (this.sprite) {
             this.sprite.destroy();
@@ -123,9 +121,27 @@ export class EditorScene extends Phaser.Scene {
         this.load.start();
     }
 
-    getDescriptor(): ShipDescriptor{
-        // TODO: repopulate descriptor
+    updateDescriptor(): ShipDescriptor{
+        
+        this.descriptor.collider = this.vertices.map( v => ({ x: v.x, y: v.y }))
+        
+        this.descriptor.origin = {
+            x: this.origin.x,
+            y: this.origin.y
+        };
+
+        this.descriptor.turretOrigin = {
+            x: this.turretOrigin.x,
+            y: this.turretOrigin.y
+        };
+
         return this.descriptor;
+    }
+
+    updateDescriptorText(): void{
+        this.descriptorText.value = JSON.stringify(
+            this.descriptor, undefined, 1
+        )
     }
 
     create(): void {
@@ -139,24 +155,13 @@ export class EditorScene extends Phaser.Scene {
             lineStyle:{
                 alpha: 0.5,
                 color: 0xff0000,
-                width: 1
+                width: 0.4
             },
             fillStyle:{
                 color: 0x00FFAA,
                 alpha: 0.2
             },
             x: 0, y: 0
-        });
-
-        this.input.keyboard.on('keydown-SPACE', () =>{
-            console.log(
-                JSON.stringify(
-                    this.vertices.map(
-                        v => {return {x: v.x, y: v.y }}
-                    ) 
-                )
-            )
-            
         });
 
         this.input.on(
@@ -169,7 +174,6 @@ export class EditorScene extends Phaser.Scene {
             {  
                 camera.zoom -= deltaY * 0.001;
                 camera.zoom = Phaser.Math.Clamp(camera.zoom, 0.4, 6)
-    
             }
         );
 
@@ -200,7 +204,9 @@ export class EditorScene extends Phaser.Scene {
 
         this.input.on('dragend', (_pointer: Phaser.Input.Pointer, gameObject:  Phaser.Physics.Matter.Sprite) => {
             gameObject.clearTint();
-            this.isDragging = false;
+            scene.isDragging = false;
+            scene.updateDescriptor();
+            scene.updateDescriptorText();
         });
 
         this.input.on('pointerup', (_pointer: Phaser.Input.Pointer) => {
@@ -251,43 +257,19 @@ export class EditorScene extends Phaser.Scene {
                 if (result.hasError){
                     console.error(`Cant load content cause ${reader.error}`)
                 }else{
-
                     scene.loadDescriptor(result.parsed);
-
                 }
             };
             reader.readAsText(file);
 
         };
-
-        /*document.getElementById("sprite_texture")!.onchange = e => {
-            
-            const target = e.currentTarget as any;
-            const file = target.files[0];
-
-            if (!file) return;
-
-            const url = URL.createObjectURL(file);
-            scene.sprite.destroy();
-            scene.textures.remove(spriteId);
-            scene.load.image(spriteId, url)
-            scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-                
-                scene.sprite = scene.add.sprite(0, 0, spriteId);
-                camera.centerOn(scene.sprite.x, scene.sprite.y);
-                this.children.bringToTop(this.graphics);
-
-                URL.revokeObjectURL(url);
-            })
-            scene.load.start();
-        };*/
     }
 
     update(_time: number, _delta: number): void {
 
         if(this.vertices.length > 1 && this.polyUpdateNeeded){
             this.graphics.clear();
-            const points = this.vertices.map( v =>  { return {x:v.x, y:v.y} } )
+            const points = this.vertices.map( v => ({x:v.x, y:v.y}));
             this.graphics.fillPoints(points, true, true);
             this.graphics.strokePath()
             this.polyUpdateNeeded = false;
