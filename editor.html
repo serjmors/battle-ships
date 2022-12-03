@@ -8,9 +8,18 @@
       #tools{
         padding: 4px 10px;
         flex-direction: column;
-        width: 100px;
-        row-gap: 10px;
-        column-gap: 1em;
+        width: 200px;
+      }
+      #tools > *{
+        margin: 4px
+      }
+      #tools > .expand{
+        flex: 1
+      }
+      #tools > textarea{
+        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        font-size: 8;
+        height: 100%;
       }
     </style>
   </head>
@@ -18,9 +27,11 @@
     <div style="display:flex">
       <div id="editor"></div>
       <aside id="tools">
-        <input type="file" name="Sprite" id="sprite_texture" accept="image/*">
-        <input type="file" name="Collider" id="ship_descriptor" accept="application/json">
-        <button id="save">Save</button>
+        <input type="file" name="Collider" id="descriptor_picker" accept="application/json">
+        <button id="save">Save descriptor</button>
+        <div class="expand">
+          <textarea name="descriptor" id="desciptor" cols="30" rows="20"></textarea>
+        </div>
         
       </aside>
   </div>

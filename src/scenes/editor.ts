@@ -1,4 +1,23 @@
+import { safeJsonParse, ParseResult } from "../utils/safeJson";
+
 const spriteId = 'ship_template'
+
+type Vector2Type = {x: number, y: number}
+interface ShipDescriptor{
+    key: string,
+    turretId: string,
+    origin: Vector2Type,
+    turretOrigin: Vector2Type,
+    collider: Array<Vector2Type>
+}
+
+function isShipDescriptor(o: any): o is ShipDescriptor {
+    return "key" in o && typeof(o.key) == 'string' 
+           && "turretId" in o && typeof(o.turretId) == 'string'
+           && "origin" in o && typeof(o.origin) == 'object'
+           && "turretOrigin" in o && typeof(o.turretOrigin) == 'object'
+           && "collider" in o && typeof(o.collider) == 'object'
+}
 
 export class EditorScene extends Phaser.Scene {
     
@@ -7,7 +26,13 @@ export class EditorScene extends Phaser.Scene {
     private graphics!: Phaser.GameObjects.Graphics;
     private polyUpdateNeeded: boolean = true;
     private isDragging: boolean = false;
-    private target!: Phaser.GameObjects.Sprite;
+
+    private sprite!: Phaser.GameObjects.Sprite;
+    private origin!: Phaser.GameObjects.Sprite;
+    private turretOrigin!: Phaser.GameObjects.Sprite;
+    private descriptor!: ShipDescriptor;
+
+    private descriptorText!: HTMLTextAreaElement;
 
     constructor() {
       super({
@@ -16,22 +41,101 @@ export class EditorScene extends Phaser.Scene {
     }
 
     preload(): void {
-        
         this.load.setBaseURL('assets/images');
         this.load.image('editor/vertex');
         this.load.image('editor/anchor');
+        this.load.image('editor/turretAnchor');
 
-        this.load.image(spriteId)
+        this.descriptorText = document.getElementById("desciptor") as HTMLTextAreaElement;
     }
     
+    addVertex(position: Vector2Type): Phaser.GameObjects.Sprite{
+        const vertex = this.add.sprite(position.x, position.y, 'editor/vertex').setInteractive({ useHandCursor: true });
+        vertex.setAlpha(0.7)
+        this.input.setDraggable(vertex);
+        this.vertices.push(vertex);
+
+        vertex.on('pointerdown', (pointer: Phaser.Input.Pointer) =>{
+            if (pointer.rightButtonDown()){
+                const idx: number = this.vertices.indexOf(vertex);
+                if (idx > -1) this.vertices.splice(idx, 1);
+                vertex.destroy();
+                this.polyUpdateNeeded = true;
+            }
+            pointer.event.stopPropagation();
+        })
+        return vertex;
+    }
+
+    clearVertices(): void{
+        this.vertices.forEach( v => v.destroy())
+        this.vertices = [];
+    }
+
+    addOrigin(position: Vector2Type){
+
+        if (!this.origin){
+            this.origin = this.add.sprite(
+                this.descriptor.origin.x, this.descriptor.origin.y,
+                'editor/anchor'
+            );
+        }
+        this.origin.setPosition(position.x, position.y).setInteractive();
+        this.input.setDraggable(this.origin);
+        this.children.bringToTop(this.origin);
+    }
+
+    addTurretOrigin(position: Vector2Type){
+
+        if (!this.turretOrigin){
+            this.turretOrigin = this.add.sprite(
+                this.descriptor.turretOrigin.x, this.descriptor.turretOrigin.y,
+                'editor/turretAnchor'
+            );
+        }
+        this.turretOrigin.setTint(0xf0f0f0)
+        this.turretOrigin.setPosition(position.x, position.y).setInteractive();
+        this.input.setDraggable(this.turretOrigin);
+        this.children.bringToTop(this.turretOrigin);
+    }
+
+    loadDescriptor(descriptor: ShipDescriptor){
+
+        this.descriptor = descriptor;
+        this.descriptorText.value = JSON.stringify(
+            this.descriptor, undefined, 1
+        );
+
+        if (this.sprite) {
+            this.sprite.destroy();
+            this.textures.remove(this.descriptor.key);
+        };
+        this.load.setBaseURL('assets/images');
+        this.load.image(this.descriptor.key);
+        this.load.once(Phaser.Loader.Events.COMPLETE, () => {  
+            this.sprite = this.add.sprite(0, 0, this.descriptor.key);
+            this.clearVertices();
+            this.descriptor.collider.forEach( v => this.addVertex(v) )
+            this.cameras.main.centerOn(this.sprite.x, this.sprite.y);
+            this.children.bringToTop(this.graphics);
+            this.addOrigin(this.descriptor.origin);
+            this.addTurretOrigin(this.descriptor.turretOrigin);
+            this.polyUpdateNeeded = true;
+        })
+        this.load.start();
+    }
+
+    getDescriptor(): ShipDescriptor{
+        // TODO: repopulate descriptor
+        return this.descriptor;
+    }
+
     create(): void {
         
         const camera = this.cameras.main;
         const scene = this;
 
         camera.setBackgroundColor('rgba(128, 128, 128)')
-        this.target = this.add.sprite(0, 0, spriteId);
-        camera.centerOn(this.target.x, this.target.y);
 
         this.graphics = this.add.graphics({
             lineStyle:{
@@ -60,9 +164,9 @@ export class EditorScene extends Phaser.Scene {
         this.input.on(
             'wheel', 
             (
-                pointer: Phaser.Input.Pointer,
-                gameObjects: Array<Phaser.GameObjects.GameObject>,
-                deltaX: number, deltaY: number, deltaZ: number
+                _pointer: Phaser.Input.Pointer,
+                _gameObjects: Array<Phaser.GameObjects.GameObject>,
+                _deltaX: number, deltaY: number, _deltaZ: number
             ) => 
             {  
                 camera.zoom -= deltaY * 0.001;
@@ -73,16 +177,16 @@ export class EditorScene extends Phaser.Scene {
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => { 
             if (pointer.leftButtonDown() && pointer.downTime - this.lastClickTimestamp <= 250){
-               const vertex = this.add.sprite(+pointer.worldX.toFixed(0), +pointer.worldY.toFixed(0), 'editor/vertex').setInteractive({ useHandCursor: true });
-               vertex.setAlpha(0.7)
-               scene.input.setDraggable(vertex);
-               this.vertices.push(vertex);
-               this.polyUpdateNeeded = true;
+                scene.addVertex({
+                    x: +pointer.worldX.toFixed(0),
+                    y: +pointer.worldY.toFixed(0)
+                });
+                this.polyUpdateNeeded = true;
             }
             this.lastClickTimestamp = pointer.downTime;
         });
 
-        this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.Physics.Matter.Sprite) => {
+        this.input.on('dragstart', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.Physics.Matter.Sprite) => {
 
             gameObject.setTint(0xff0000);
             this.isDragging = true;
@@ -96,12 +200,12 @@ export class EditorScene extends Phaser.Scene {
 
         });
 
-        this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject:  Phaser.Physics.Matter.Sprite) => {
+        this.input.on('dragend', (_pointer: Phaser.Input.Pointer, gameObject:  Phaser.Physics.Matter.Sprite) => {
             gameObject.clearTint();
             this.isDragging = false;
         });
 
-        this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+        this.input.on('pointerup', (_pointer: Phaser.Input.Pointer) => {
             
         });
 
@@ -116,11 +220,11 @@ export class EditorScene extends Phaser.Scene {
             }
         });
 
-        document.getElementById("save")!.onclick = async e =>{
+        document.getElementById("save")!.onclick = async () => {
             const fileHandle = await window.showSaveFilePicker({
                 types:[{
                     description: 'Ship descriptor',
-                    accept: {'application/json': ['.ship']},
+                    accept: {'application/json': ['.json']},
                 }]
             });
             const fileStream = await fileHandle.createWritable();
@@ -136,23 +240,29 @@ export class EditorScene extends Phaser.Scene {
             await fileStream.close()
         }
 
-        document.getElementById("ship_descriptor")!.onchange = e => {
+        document.getElementById("descriptor_picker")!.onchange = e => {
             
             const target = e.currentTarget as any;
             const file = target.files[0];
 
             if (!file) return;
+            const reader: FileReader = new FileReader();
+            reader.onload = e => {
+                const content: string = e!.target!.result?.toString() || '';
+                const result: ParseResult<ShipDescriptor>  = safeJsonParse(isShipDescriptor)(content);
+                if (result.hasError){
+                    console.error(`Cant load content cause ${reader.error}`)
+                }else{
 
-            const url = URL.createObjectURL(file);
-            scene.load.json(spriteId, url)
-            scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-                console.log(scene.cache.json.get(spriteId));
-                URL.revokeObjectURL(url);
-            })
-            scene.load.start();
+                    scene.loadDescriptor(result.parsed);
+
+                }
+            };
+            reader.readAsText(file);
+
         };
 
-        document.getElementById("sprite_texture")!.onchange = e => {
+        /*document.getElementById("sprite_texture")!.onchange = e => {
             
             const target = e.currentTarget as any;
             const file = target.files[0];
@@ -160,23 +270,22 @@ export class EditorScene extends Phaser.Scene {
             if (!file) return;
 
             const url = URL.createObjectURL(file);
-            this.target.destroy();
+            scene.sprite.destroy();
             scene.textures.remove(spriteId);
             scene.load.image(spriteId, url)
             scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-                console.log('load completed');
                 
-                scene.target = scene.add.sprite(0, 0, spriteId);
-                camera.centerOn(scene.target.x, scene.target.y);
+                scene.sprite = scene.add.sprite(0, 0, spriteId);
+                camera.centerOn(scene.sprite.x, scene.sprite.y);
                 this.children.bringToTop(this.graphics);
 
                 URL.revokeObjectURL(url);
             })
             scene.load.start();
-        };
+        };*/
     }
 
-    update(time: number, delta: number): void {
+    update(_time: number, _delta: number): void {
 
         if(this.vertices.length > 1 && this.polyUpdateNeeded){
             this.graphics.clear();
