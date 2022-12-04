@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import { safeJsonParse, ParseResult } from "../utils/safeJson";
 
 type Vector2Type = {x: number, y: number}
@@ -21,7 +22,8 @@ export class EditorScene extends Phaser.Scene {
     
     private lastClickTimestamp: number = 0;
     private vertices: Array<Phaser.GameObjects.Sprite> = [];
-    private graphics!: Phaser.GameObjects.Graphics;
+    private polyline!: Phaser.GameObjects.Graphics;
+    private background!: Phaser.GameObjects.Graphics;
     private polyUpdateNeeded: boolean = true;
     private isDragging: boolean = false;
 
@@ -47,9 +49,21 @@ export class EditorScene extends Phaser.Scene {
         this.descriptorText = document.getElementById("desciptor") as HTMLTextAreaElement;
     }
     
-    addVertex(position: Vector2Type): Phaser.GameObjects.Sprite{
-        const vertex = this.add.sprite(position.x, position.y, 'editor/vertex').setInteractive({ useHandCursor: true });
-        vertex.setAlpha(0.7)
+    addVertex(position: Vector2Type): Phaser.GameObjects.Sprite | undefined{
+
+        if (!this.physics.world.bounds.contains(position.x , position.y))
+            return;
+
+        const vertex = this.physics.add
+                .sprite(
+                    position.x,
+                    position.y,
+                    'editor/vertex'
+                ).setInteractive({ useHandCursor: true })
+                 .setAlpha(0.7)
+                 .setCollideWorldBounds(true)
+                 .setBodySize(1, 1)
+
         this.input.setDraggable(vertex);
         this.vertices.push(vertex);
 
@@ -110,12 +124,46 @@ export class EditorScene extends Phaser.Scene {
         this.load.image(this.descriptor.key);
         this.load.once(Phaser.Loader.Events.COMPLETE, () => {  
             this.sprite = this.add.sprite(0, 0, this.descriptor.key);
+            
+            if (!this.background)
+            this.background = this.add.graphics({
+                fillStyle:{
+                    alpha: 0.7,
+                    color: 0x000000
+                },
+                lineStyle: {
+                    width: 0.7,
+                    alpha: 1,
+                    color: 	0x708090
+                }
+            });
+            this.background.clear();
+            this.background.strokeRect(
+                this.sprite.getTopLeft().x, this.sprite.getTopLeft().y,
+                this.sprite.width, this.sprite.height
+            )
+
+            this.add.grid(
+                this.sprite.x, this.sprite.y,
+                this.sprite.width, this.sprite.height, 4, 4,
+                0xA9A9A9
+            ).setAltFillStyle(0xDCDCDC)
+            .setOutlineStyle();
+            
+            this.children.bringToTop(this.sprite);
             this.clearVertices();
             this.descriptor.collider.forEach( v => this.addVertex(v) )
             this.cameras.main.centerOn(this.sprite.x, this.sprite.y);
-            this.children.bringToTop(this.graphics);
+            this.children.bringToTop(this.polyline);
             this.addOrigin(this.descriptor.origin);
             this.addTurretOrigin(this.descriptor.turretOrigin);
+            this.physics.world.setBounds(
+                this.sprite.getTopLeft().x,
+                this.sprite.getTopLeft().y,
+                this.sprite.width,
+                this.sprite.height
+            );
+
             this.polyUpdateNeeded = true;
         })
         this.load.start();
@@ -123,7 +171,8 @@ export class EditorScene extends Phaser.Scene {
 
     updateDescriptor(): ShipDescriptor{
         
-        this.descriptor.collider = this.vertices.map( v => ({ x: v.x, y: v.y }))
+        this.descriptor.collider = this.vertices.map( v => ({ x: v.x, y: v.y }));
+
         
         this.descriptor.origin = {
             x: this.origin.x,
@@ -151,7 +200,7 @@ export class EditorScene extends Phaser.Scene {
 
         camera.setBackgroundColor('rgba(128, 128, 128)')
 
-        this.graphics = this.add.graphics({
+        this.polyline = this.add.graphics({
             lineStyle:{
                 alpha: 0.5,
                 color: 0xff0000,
@@ -197,9 +246,16 @@ export class EditorScene extends Phaser.Scene {
 
         this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.Physics.Matter.Sprite) => {
             
-            gameObject.setPosition(+pointer.worldX.toFixed(0), +pointer.worldY.toFixed(0));
+            const newX = Phaser.Math.Clamp(
+                +pointer.worldX.toFixed(0),
+                this.physics.world.bounds.left, this.physics.world.bounds.right
+            );
+            const newY = Phaser.Math.Clamp(
+                +pointer.worldY.toFixed(0),
+                this.physics.world.bounds.top, this.physics.world.bounds.bottom
+            );
+            gameObject.setPosition(newX, newY);
             this.polyUpdateNeeded = true;
-
         });
 
         this.input.on('dragend', (_pointer: Phaser.Input.Pointer, gameObject:  Phaser.Physics.Matter.Sprite) => {
@@ -268,10 +324,10 @@ export class EditorScene extends Phaser.Scene {
     update(_time: number, _delta: number): void {
 
         if(this.vertices.length > 1 && this.polyUpdateNeeded){
-            this.graphics.clear();
+            this.polyline.clear();
             const points = this.vertices.map( v => ({x:v.x, y:v.y}));
-            this.graphics.fillPoints(points, true, true);
-            this.graphics.strokePath()
+            this.polyline.fillPoints(points, true, true);
+            this.polyline.strokePath()
             this.polyUpdateNeeded = false;
         }
 
