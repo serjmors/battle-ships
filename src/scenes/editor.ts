@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "crypto";
 import { safeJsonParse, ParseResult } from "../utils/safeJson";
 
 type Vector2Type = {x: number, y: number}
@@ -32,6 +31,8 @@ export class EditorScene extends Phaser.Scene {
     private turretOrigin!: Phaser.GameObjects.Sprite;
     private descriptor!: ShipDescriptor;
 
+    private keyText!: HTMLInputElement;
+    private turretKeyText!: HTMLInputElement;
     private descriptorText!: HTMLTextAreaElement;
 
     constructor() {
@@ -47,12 +48,11 @@ export class EditorScene extends Phaser.Scene {
         this.load.image('editor/turretAnchor');
 
         this.descriptorText = document.getElementById("desciptor") as HTMLTextAreaElement;
+        this.keyText = document.getElementById("key") as HTMLInputElement;
+        this.turretKeyText = document.getElementById("turretId") as HTMLInputElement;
     }
     
     addVertex(position: Vector2Type): Phaser.GameObjects.Sprite | undefined{
-
-        if (!this.physics.world.bounds.contains(position.x , position.y))
-            return;
 
         const vertex = this.physics.add
                 .sprite(
@@ -84,29 +84,30 @@ export class EditorScene extends Phaser.Scene {
         this.vertices = [];
     }
 
-    addOrigin(position: Vector2Type){
+    addOrigin(origin: Vector2Type){
 
         if (!this.origin){
             this.origin = this.add.sprite(
-                this.descriptor.origin.x, this.descriptor.origin.y,
+                0, 0,
                 'editor/anchor'
             );
         }
-        this.origin.setPosition(position.x, position.y).setInteractive();
+        const originPosition = utils.originToPoint(origin, this.sprite);
+        this.origin.setPosition(originPosition.x, originPosition.y).setInteractive();
         this.input.setDraggable(this.origin);
         this.children.bringToTop(this.origin);
     }
 
-    addTurretOrigin(position: Vector2Type){
+    addTurretOrigin(origin: Vector2Type){
 
         if (!this.turretOrigin){
             this.turretOrigin = this.add.sprite(
-                this.descriptor.turretOrigin.x, this.descriptor.turretOrigin.y,
+                0, 0,
                 'editor/turretAnchor'
             );
         }
-        this.turretOrigin.setTint(0xf0f0f0)
-        this.turretOrigin.setPosition(position.x, position.y).setInteractive();
+        const originPosition = utils.originToPoint(origin, this.sprite);        
+        this.turretOrigin.setPosition(originPosition.x, originPosition.y).setInteractive();
         this.input.setDraggable(this.turretOrigin);
         this.children.bringToTop(this.turretOrigin);
     }
@@ -164,25 +165,22 @@ export class EditorScene extends Phaser.Scene {
                 this.sprite.height
             );
 
+            this.keyText.value = this.descriptor.key.trim();
+            this.turretKeyText.value = this.descriptor.turretId.trim();
             this.polyUpdateNeeded = true;
         })
         this.load.start();
     }
 
     updateDescriptor(): ShipDescriptor{
-        
+    
+
         this.descriptor.collider = this.vertices.map( v => ({ x: v.x, y: v.y }));
+        this.descriptor.origin = utils.pointToOrigin({x: this.origin.x, y: this.origin.y}, this.sprite);
+        this.descriptor.turretOrigin = utils.pointToOrigin({x: this.turretOrigin.x, y:this.turretOrigin.y}, this.sprite);
 
-        
-        this.descriptor.origin = {
-            x: this.origin.x,
-            y: this.origin.y
-        };
-
-        this.descriptor.turretOrigin = {
-            x: this.turretOrigin.x,
-            y: this.turretOrigin.y
-        };
+        this.descriptor.key = this.keyText.value.trim();
+        this.descriptor.turretId = this.turretKeyText.value.trim();
 
         return this.descriptor;
     }
@@ -289,12 +287,9 @@ export class EditorScene extends Phaser.Scene {
             });
             const fileStream = await fileHandle.createWritable();
 
+            this.updateDescriptor();
             const content = new Blob([
-                JSON.stringify(
-                    this.vertices.map(
-                        v => {return {x: v.x, y: v.y }}
-                    ) 
-                )
+                JSON.stringify(this.descriptor, undefined, '\t')
             ])
             await fileStream.write(content);
             await fileStream.close()
@@ -333,5 +328,24 @@ export class EditorScene extends Phaser.Scene {
 
     }
 
- 
+}
+
+const utils = {
+
+    pointToOrigin: function (worldPosition: Vector2Type, sprite: Phaser.GameObjects.Sprite): Vector2Type{
+        const localCoords = sprite.getLocalPoint(worldPosition.x, worldPosition.y);
+        return {
+            x: +(localCoords.x / sprite.width).toFixed(2),
+            y: +(localCoords.y / sprite.height).toFixed(2)
+        }
+    },
+
+    originToPoint: function(origin: Vector2Type, sprite: Phaser.GameObjects.Sprite): Vector2Type{
+     
+        return {
+            x : sprite.getLeftCenter().lerp(sprite.getRightCenter(), origin.x).x,
+            y : sprite.getTopCenter().lerp(sprite.getBottomCenter(), origin.y).y
+        }
+    
+    }
 }

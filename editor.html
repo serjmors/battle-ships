@@ -4,36 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ship editor</title>
-    <style>
-      #tools{
-        padding: 4px 10px;
-        flex-direction: column;
-        width: 200px;
-      }
-      #tools > *{
-        margin: 4px
-      }
-      #tools > .expand{
-        flex: 1
-      }
-      #tools > textarea{
-        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-        font-size: 8;
-        height: 100%;
-      }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   </head>
-  <body>
-    <div style="display:flex">
-      <div id="editor"></div>
-      <aside id="tools">
-        <input type="file" name="Collider" id="descriptor_picker" accept="application/json">
-        <button id="save">Save descriptor</button>
-        <div class="expand">
-          <textarea name="descriptor" id="desciptor" cols="30" rows="20"></textarea>
+  <body style="background-color: 		#D3D3D3;">
+    <div class="container pt-4">
+      <div class="row">
+        <div class="col">     
+            <div id="editor"></div>
         </div>
-        
-      </aside>
+        <div class="col">
+          <div class="row">
+              <input class="form-control" type="file" id="descriptor_picker" accept="application/json">
+              
+              <label for="key" class="form-label">key:</label>
+              <input class="form-control" type="text" id="key">
+              
+              <label for="turretId" class="form-label">turretId:</label>
+              <input class="form-control" type="text" id="turretId">
+
+              <label for="desciptor" class="form-label">descriptor:</label>
+              <textarea class="form-control" id="desciptor"></textarea>
+
+              <button id="save" class="btn btn-primary mt-4">Save</button>
+              
+          </div>
+        </div>
+      </div>  
   </div>
     <script type="module" src="/src/editor.ts"></script>
   </body>
